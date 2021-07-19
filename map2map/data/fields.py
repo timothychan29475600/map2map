@@ -317,6 +317,17 @@ def fill(field, patch, anchor):
 
 
 def crop(fields, anchor, crop, pad):
+    
+    """ Debug message """
+    from datetime import datetime
+    timestamp = datetime.today().timestamp()
+
+    with open(f'{timestamp}','w') as f:
+        print('fields[0].shape: ',fields[0].shape,file=f)
+        for i,x in enumerate(fields):
+            print(i,'x.shape',x.shape,file=f)
+    """ End of debug message """
+
     assert all(x.shape == fields[0].shape for x in fields), 'shape mismatch'
     size = fields[0].shape[1:]
     ndim = len(size)
