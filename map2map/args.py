@@ -196,8 +196,11 @@ def add_test_args(parser):
     parser.add_argument('--num-threads', type=int,
             help='number of CPU threads when cuda is unavailable. '
             'Default is the number of CPUs on the node by slurm')
-
-
+    
+    # Modified by Timothy Chan Yan Mong to output more detailed statistics after training 
+    parser.add_argument('--stats-callback',type=str,
+            help='callback for computing additional statistics and such')
+            
 def str_list(s):
     return s.split(',')
 

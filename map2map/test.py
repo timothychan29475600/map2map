@@ -72,6 +72,15 @@ def test(args):
                             callback_at=args.callback_at)
     criterion = criterion()
     criterion.to(device)
+    
+    # Statistics for testing
+    if args.stats_callback is not None:
+        test_stats = import_attr(args.stats_callback,callback_at=args.callback_at)
+        test_stats = test_stats()
+        print('Test statistics is enabled!')
+    else:
+        print('Test statistics is not enabled!')
+
 
     state = torch.load(args.load_state, map_location=device)
     load_model_state_dict(model, state['model'], strict=args.load_state_strict)
@@ -102,6 +111,10 @@ def test(args):
             loss = criterion(output, target)
 
             print('sample {} loss: {}'.format(i, loss.item()))
+            
+            # Computing test stats
+            test_stats.compute_stat(input,output,target)
+        
 
             #if args.in_norms is not None:
             #    start = 0
