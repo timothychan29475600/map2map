@@ -7,6 +7,7 @@ from .resample import resample, Resampler
 
 from .lag2eul import lag2eul
 from .power import power
+from .pdf import prob_den
 
 from .dice import DiceLoss, dice_loss
 

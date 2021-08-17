@@ -12,7 +12,7 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from .data import FieldDataset, DistFieldSampler
+from .data import FieldDataset, DistFieldSampler,norms
 from . import models
 from .models import (
     narrow_cast, resample,
@@ -20,7 +20,7 @@ from .models import (
     add_spectral_norm,
     InstanceNoise,
 )
-from .utils import import_attr, load_model_state_dict, plt_slices, plt_power
+from .utils import import_attr, load_model_state_dict, plt_slices, plt_power, plt_pdf
 
 
 ckpt_link = 'checkpoint.pt'
@@ -491,6 +491,23 @@ def train(epoch, loader, model, criterion, optimizer, scheduler,
         )
         logger.add_figure('fig/train/power/lag', fig, global_step=epoch+1)
         fig.clf()
+        
+        
+        unrm_out = output.clone().detach()
+        unrm_tgt = target.clone().detach()
+        
+        if args.tgt_norms is not None:
+            for chn in range(len(args.tgt_norms)):
+                norm = import_attr(args.tgt_norms[chn],norms, callback_at=args.callback_at)
+                norm(unrm_out[:,chn,...],undo=True,**args.misc_kwargs)
+                norm(unrm_tgt[:,chn,...],undo=True,**args.misc_kwargs)
+
+        fig = plt_pdf(
+                unrm_out[:,skip_chan:], unrm_tgt[:,skip_chan:],
+                label=['out','tgt'],
+                **args.misc_kwargs,
+        )
+        logger.add_figure('fig/train/pdf',fig,global_step=epoch+1)
 
         #fig = plt_power(1.0,
         #    dis=[input, output[:, skip_chan:], target[:, skip_chan:]],
@@ -591,6 +608,24 @@ def validate(epoch, loader, model, criterion, adv_model, adv_criterion,
             **args.misc_kwargs,
         )
         logger.add_figure('fig/val/power/lag', fig, global_step=epoch+1)
+        fig.clf()
+
+        
+        unrm_out = output.clone().detach()
+        unrm_tgt = target.clone().detach()
+        
+        if args.tgt_norms is not None:
+            for chn in range(len(args.tgt_norms)):
+                norm = import_attr(args.tgt_norms[chn],norms, callback_at=args.callback_at)
+                norm(unrm_out[:,chn,...],undo=True,**args.misc_kwargs)
+                norm(unrm_tgt[:,chn,...],undo=True,**args.misc_kwargs)
+
+        fig = plt_pdf(
+                unrm_out[:,skip_chan:], unrm_tgt[:,skip_chan:],
+                label=['out','tgt'],
+                **args.misc_kwargs,
+        )
+        logger.add_figure('fig/val/pdf', fig, global_step=epoch+1)
         fig.clf()
 
         #fig = plt_power(1.0,

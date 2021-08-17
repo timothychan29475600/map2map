@@ -8,7 +8,7 @@ from matplotlib.colors import Normalize, LogNorm, SymLogNorm
 from matplotlib.cm import ScalarMappable
 plt.rc('text', usetex=False)
 
-from ..models import lag2eul, power
+from ..models import lag2eul, power, prob_den
 
 
 def quantize(x):
@@ -165,3 +165,41 @@ def plt_power(*fields, dis=None, label=None, **kwargs):
     fig.tight_layout()
 
     return fig
+
+def plt_pdf(*fields, dis=None, label=None, **kwargs):
+    """ Plot pdf of fields
+
+    Each field should have batch and channel dimensions followed by spatial dimensions.
+    """
+    plt.close('all')
+
+    if label is not None:
+        assert len(label) == len(fields) or len(label) == len(dis)
+    else:
+        label = [None] * len(fields)
+
+    with torch.no_grad():
+        rhos, pdfs = [],[]
+        for field in fields:
+            field = field[:,0,:,:,:]
+            print(field.shape)
+            rho, pdf, _ = prob_den(field)
+            rhos.append(rho)
+            pdfs.append(pdf)
+    
+    rhos = [rho.cpu().numpy() for rho in rhos]
+    pdfs = [pdf.cpu().numpy() for pdf in pdfs]
+
+    fig, axes = plt.subplots(figsize=(4.8,3.6), dpi=150)
+
+    for rho, pdf, l in zip(rhos, pdfs, label):
+       axes.loglog(rho, pdf, label=l, alpha=0.7)
+
+    axes.legend()
+    axes.set_xlabel(r'$\rho_p$ (no undo norm)')
+    axes.set_ylabel(r'Probability density')
+
+    fig.tight_layout()
+
+    return fig
+
