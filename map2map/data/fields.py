@@ -54,6 +54,10 @@ class FieldDataset(Dataset):
 
         tgt_file_lists = [sorted(glob(p)) for p in tgt_patterns]
         self.tgt_files = list(zip(* tgt_file_lists))
+        
+        print(in_patterns, tgt_patterns)
+        #print(self.in_files, self.tgt_files)
+        print(len(self.in_files), len(self.tgt_files))
 
         if len(self.in_files) != len(self.tgt_files):
             raise ValueError('number of input and target fields do not match')

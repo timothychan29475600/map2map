@@ -113,7 +113,7 @@ def test(args):
             print('sample {} loss: {}'.format(i, loss.item()))
             
             # Computing test stats
-            test_stats.compute_stat(input,output,target)
+            #test_stats.compute_stat(input,output,target,relpath=data['target_relpath'])
         
 
             #if args.in_norms is not None:
@@ -129,7 +129,7 @@ def test(args):
                     norm(output[:, start:stop], undo=True, **args.misc_kwargs)
                     #norm(target[:, start:stop], undo=True, **args.misc_kwargs)
                     start = stop
-
+            #test_stats.compute_stat(input,output,target,relpath=data['target_relpath'])
             #test_dataset.assemble('_in', in_chan, input,
             #                      data['input_relpath'])
             test_dataset.assemble('_out', out_chan, output,
