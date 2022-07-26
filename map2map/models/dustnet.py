@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .conv import ConvBlock, ResBlock
+from .conv import ConvBlockDropout, ResBlockDropout
 from .narrow import narrow_by
 
 
@@ -23,17 +23,19 @@ class DustNet(nn.Module):
 
         # activate non-identity skip connection in residual block
         # by explicitly setting out_chan
-        self.conv_l0 = ResBlock(in_chan, 128, seq='CACBA')
-        self.down_l0 = ConvBlock(128, seq='DBA')
-        self.conv_l1 = ResBlock(128, 128, seq='CBACBA')
-        self.down_l1 = ConvBlock(128, seq='DBA')
+        self.p = float(kwargs['mc_dropout_p']) # Change dropout rate to test
+        print(f'Dropout probability: {self.p}')
+        self.conv_l0 = ResBlockDropout(in_chan, 64, seq='COACOBA',p=self.p)
+        self.down_l0 = ConvBlockDropout(64, seq='DOBA',p=self.p)
+        self.conv_l1 = ResBlockDropout(64, 64, seq='COBACOBA',p=self.p)
+        self.down_l1 = ConvBlockDropout(64, seq='DOBA',p=self.p)
 
-        self.conv_c = ResBlock(128, 128, seq='CBACBA')
+        self.conv_c = ResBlockDropout(64, 64, seq='COBACOBA',p=self.p)
 
-        self.up_r1 = ConvBlock(128, seq='UBA')
-        self.conv_r1 = ResBlock(256, 128, seq='CBACBA')
-        self.up_r0 = ConvBlock(128, seq='UBA')
-        self.conv_r0 = ResBlock(256, out_chan, seq='CAC')
+        self.up_r1 = ConvBlockDropout(64, seq='UOBA',p=self.p)
+        self.conv_r1 = ResBlockDropout(128, 64, seq='COBACOBA',p=self.p)
+        self.up_r0 = ConvBlockDropout(64, seq='UOBA',p=self.p)
+        self.conv_r0 = ResBlockDropout(128, out_chan, seq='COAC',p=self.p)
 
         if bypass is None:
             self.bypass = in_chan == out_chan
