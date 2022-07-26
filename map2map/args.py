@@ -17,6 +17,10 @@ def get_args():
         'train',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
+    swag_train_parser = subparsers.add_parser(
+        'swag_train',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     test_parser = subparsers.add_parser(
         'test',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -183,7 +187,21 @@ def add_train_args(parser):
             help='interval (batches) between logging training loss')
     parser.add_argument('--detect-anomaly', action='store_true',
             help='enable anomaly detection for the autograd engine')
-
+   
+    # SWAG Sampling method (Maddox et. al. 2019; A Simple Baseline for Bayesian Uncertainty in Deep Learning)
+    parser.add_argument('--swag',action='store_true',
+            help='Enable SWAG')
+    parser.add_argument('--swag_start',type=float,default=120,
+            help='SWA start epoch (Default: 120)')
+    parser.add_argument('--swag_lr', type=float, default=0.02,
+            help="SWAG LR (default: 0.02)")
+    parser.add_argument('--swag_c_epochs', type=int, default=1,
+            help="SWA model collection frequency/cycle length in epochs (default: 1)")
+    parser.add_argument('--swag_K',type=int,default=20,
+            help='Maximum number of models (K) to be stored (default: 20)')
+    parser.add_argument('--swag_use_conv',action='store_true',
+            help='Save sample covariance')
+    parser.add_argument('--swag_eval_freq',type=int,help='SWAG evaluation frequency (default: 5)',default=5)
 
 def add_test_args(parser):
     add_common_args(parser)
@@ -201,9 +219,42 @@ def add_test_args(parser):
     parser.add_argument('--stats-callback',type=str,
             help='callback for computing additional statistics and such')
             
+    parser.add_argument('--dropout-sample',type=bool,default=False,help='MC dropout sampling')
+    parser.add_argument('--valid-npy-out-dir',type=str,default=None,help='Output directory for npys')
+    
+    # SWAG arguments
+    parser.add_argument('--swag',action='store_true',
+            help='Enable SWAG')
+    parser.add_argument('--swag_use_conv',action='store_true',
+            help='Save sample covariance')
+    parser.add_argument('--swag_num_samples',type=int,default=20,
+            help='Number of samples drawn for teach test data')
+    parser.add_argument('--swag_K',type=int,default=20,
+            help='Maximum number of models (K) to be stored (default: 20)')
+    parser.add_argument('--swag_sample_scale',type=float,default=1.0,
+            help='Scaling of covariance matrix (Default 1.0; Use 0.0 to turn off the randomness)')
+
+    parser.add_argument('--train-in-patterns', type=str_list, required=True,
+            help='comma-sep. list of glob patterns for training input data')
+    parser.add_argument('--train-tgt-patterns', type=str_list, required=True,
+            help='comma-sep. list of glob patterns for training target data')
+    
+    parser.add_argument('--augment', action='store_true',
+            help='enable data augmentation of axis flipping and permutation')
+    parser.add_argument('--aug-shift', type=int_tuple,
+            help='data augmentation by shifting cropping by [0, aug_shift) pixels, '
+            'useful for models that treat neighboring pixels differently, '
+            'e.g. with strided convolutions. '
+            'Comma-sep. list of 1 or d integers')
+    parser.add_argument('--aug-add', type=float,
+            help='additive data augmentation, (normal) std, '
+            'same factor for all fields')
+    parser.add_argument('--aug-mul', type=float,
+            help='multiplicative data augmentation, (log-normal) std, '
+            'same factor for all fields')
+
 def str_list(s):
     return s.split(',')
-
 
 def int_tuple(s):
     t = s.split(',')

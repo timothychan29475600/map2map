@@ -81,6 +81,7 @@ def test(args):
     else:
         print('Test statistics is not enabled!')
 
+    make_prefix_dir(args.valid_npy_out_dir) 
 
     state = torch.load(args.load_state, map_location=device)
     load_model_state_dict(model, state['model'], strict=args.load_state_strict)
@@ -89,8 +90,11 @@ def test(args):
     del state
 
     model.eval()
-
+    if args.dropout_sample:
+        model.train()
+    
     with torch.no_grad():
+        count = 1
         for i, data in enumerate(test_loader):
             input, target = data['input'], data['target']
 
@@ -132,7 +136,19 @@ def test(args):
             #test_stats.compute_stat(input,output,target,relpath=data['target_relpath'])
             #test_dataset.assemble('_in', in_chan, input,
             #                      data['input_relpath'])
-            test_dataset.assemble('_out', out_chan, output,
-                                  data['target_relpath'])
+            test_dataset.assemble(f'_out', out_chan, output,
+                                  add_prefix(data['target_relpath'],prefix=args.valid_npy_out_dir))
+            print(data['target_relpath']) 
             #test_dataset.assemble('_tgt', out_chan, target,
             #                      data['target_relpath'])
+            count += 1
+def add_prefix(path_gp,prefix):
+    if prefix is not None:
+        return [[f'{prefix}/{path}' for path in gp] for gp in path_gp]
+    return path_gp
+
+def make_prefix_dir(prefix):
+    if prefix is not None:
+        from pathlib import Path
+        if not Path(prefix).exists():
+            os.mkdir(prefix)
