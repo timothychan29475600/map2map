@@ -1,6 +1,6 @@
 """
-    implementation of SWAG 
-    (Ported from https://github.com/wjmaddox/swa_gaussian/blob/b172d93278fdb92522c8fccb7c6bfdd6f710e4f0/swag/posteriors/swag.py)
+    Implementation of SWAG (Maddox et. al. 2019)
+    (Ported from repository: https://github.com/wjmaddox/swa_gaussian/blob/b172d93278fdb92522c8fccb7c6bfdd6f710e4f0/swag/posteriors/swag.py)
 """
 
 import torch
